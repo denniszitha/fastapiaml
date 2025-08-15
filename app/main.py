@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
-from app.api.endpoints import transaction_monitoring
+from app.api.endpoints import transaction_monitoring, simple_statistics, auth
 from app.db.base import engine, Base
 
 # Configure logging
@@ -34,9 +34,18 @@ app = FastAPI(
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "http://localhost:3002",
+        "http://localhost:3003",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002", 
+        "http://127.0.0.1:3003"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -45,6 +54,18 @@ app.include_router(
     transaction_monitoring.router,
     prefix=settings.API_V1_PREFIX,
     tags=["transaction-monitoring"]
+)
+
+app.include_router(
+    simple_statistics.router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["statistics"]
+)
+
+app.include_router(
+    auth.router,
+    prefix=settings.API_V1_PREFIX,
+    tags=["authentication"]
 )
 
 @app.get("/")

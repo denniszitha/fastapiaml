@@ -32,8 +32,11 @@ class Settings(BaseSettings):
     ENABLE_AI_ANALYSIS: bool = os.getenv("ENABLE_AI_ANALYSIS", "false").lower() == "true"
     ENABLE_EXTERNAL_SYNC: bool = os.getenv("ENABLE_EXTERNAL_SYNC", "false").lower() == "true"
     
-    # CORS settings
+    # CORS settings - Allow all origins for development
     BACKEND_CORS_ORIGINS: list = ["*"]
+    
+    # Organization
+    ORGANIZATION_NAME: str = os.getenv("ORGANIZATION_NAME", "NATSAVE Bank")
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
@@ -41,5 +44,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Allow extra fields from .env
 
 settings = Settings()

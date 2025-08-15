@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: aml_user
+      POSTGRES_PASSWORD: aml_password
+      POSTGRES_DB: aml_database
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aml_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    ports:
+      - "50000:50000"
+    environment:
+      DATABASE_URL: postgresql://aml_user:aml_password@db:5432/aml_database
+      WEBHOOK_TOKEN: ${WEBHOOK_TOKEN:-your-secure-webhook-token}
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key}
+      MONITORING_ENABLED: ${MONITORING_ENABLED:-true}
+      ENABLE_AI_ANALYSIS: ${ENABLE_AI_ANALYSIS:-false}
+      ENABLE_EXTERNAL_SYNC: ${ENABLE_EXTERNAL_SYNC:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 50000 --reload
+
+volumes:
+  postgres_data:

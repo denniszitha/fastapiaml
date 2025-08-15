@@ -1,0 +1,36 @@
+[Unit]
+Description=AML Transaction Monitoring FastAPI Service
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=forking
+User=amlapp
+Group=amlapp
+WorkingDirectory=/opt/aml-monitoring
+Environment="PATH=/opt/aml-monitoring/venv/bin"
+ExecStart=/opt/aml-monitoring/venv/bin/gunicorn app.main:app \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 127.0.0.1:50000 \
+    --daemon \
+    --access-logfile /var/log/aml-monitoring/access.log \
+    --error-logfile /var/log/aml-monitoring/error.log \
+    --pid /run/aml-monitoring/gunicorn.pid
+
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/aml-monitoring /run/aml-monitoring
+
+[Install]
+WantedBy=multi-user.target

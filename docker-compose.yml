@@ -12,7 +12,6 @@ services:
       POSTGRES_DB: ${DB_NAME:-aml_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrate_mysql_to_postgres.sql:/docker-entrypoint-initdb.d/01-schema.sql
     ports:
       - "${DB_PORT:-5432}:5432"
     networks:
@@ -44,7 +43,7 @@ services:
   # FastAPI Backend
   backend:
     build:
-      context: ./fastapi-aml-monitoring
+      context: .
       dockerfile: Dockerfile
     container_name: aml_backend
     restart: unless-stopped
@@ -56,7 +55,7 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:80}
       PYTHONUNBUFFERED: 1
     volumes:
-      - ./fastapi-aml-monitoring/app:/app/app
+      - ./app:/app/app
       - backend_logs:/app/logs
     ports:
       - "${BACKEND_PORT:-8000}:8000"

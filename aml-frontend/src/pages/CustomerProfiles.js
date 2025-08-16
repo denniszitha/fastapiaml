@@ -27,79 +27,20 @@ const riskColors = {
   critical: 'bg-red-100 text-red-800',
 };
 
-const mockProfiles = [
-  {
-    id: 1,
-    acct_no: 'ACC-2024-0001',
-    acct_name: 'John Smith Enterprises',
-    risk_score: 35,
-    risk_level: 'low',
-    last_transaction_id: 'TXN-123456',
-    acct_opn_date: '2023-01-15',
-    branch: 'MAIN',
-    country: 'USA',
-    mobile_no: '+1-555-0123',
-    total_transactions: 245,
-    total_amount: 1250000,
-    suspicious_count: 2,
-    last_activity: '2024-01-15T10:30:00',
-  },
-  {
-    id: 2,
-    acct_no: 'ACC-2024-0002',
-    acct_name: 'Global Trading Corp',
-    risk_score: 72,
-    risk_level: 'high',
-    last_transaction_id: 'TXN-123457',
-    acct_opn_date: '2023-03-20',
-    branch: 'INTL',
-    country: 'UAE',
-    mobile_no: '+971-555-0124',
-    total_transactions: 523,
-    total_amount: 5750000,
-    suspicious_count: 15,
-    last_activity: '2024-01-15T14:45:00',
-  },
-  {
-    id: 3,
-    acct_no: 'ACC-2024-0003',
-    acct_name: 'Sarah Johnson',
-    risk_score: 45,
-    risk_level: 'medium',
-    last_transaction_id: 'TXN-123458',
-    acct_opn_date: '2022-11-10',
-    branch: 'WEST',
-    country: 'USA',
-    mobile_no: '+1-555-0125',
-    total_transactions: 128,
-    total_amount: 450000,
-    suspicious_count: 5,
-    last_activity: '2024-01-14T09:15:00',
-  },
-];
+// Default empty profiles when API fails
+const defaultProfiles = [];
 
 export default function CustomerProfiles() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [riskFilter, setRiskFilter] = useState('all');
+  const [profiles, setProfiles] = useState(defaultProfiles);
 
-  // Mock transaction history for selected profile
-  const transactionHistory = [
-    { date: 'Jan 1', amount: 5000, risk: 20 },
-    { date: 'Jan 5', amount: 15000, risk: 45 },
-    { date: 'Jan 10', amount: 8000, risk: 30 },
-    { date: 'Jan 12', amount: 25000, risk: 65 },
-    { date: 'Jan 15', amount: 12000, risk: 40 },
-  ];
+  // Default empty data
+  const transactionHistory = [];
+  const riskDistribution = [];
 
-  const riskDistribution = [
-    { name: 'Low Risk', value: 45, color: '#10b981' },
-    { name: 'Medium Risk', value: 30, color: '#f59e0b' },
-    { name: 'High Risk', value: 20, color: '#ef4444' },
-    { name: 'Critical', value: 5, color: '#7c3aed' },
-  ];
-
-  const filteredProfiles = mockProfiles.filter(profile => {
+  const filteredProfiles = profiles.filter(profile => {
     const matchesSearch = 
       profile.acct_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.acct_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -114,7 +55,7 @@ export default function CustomerProfiles() {
     try {
       // In production, this would fetch from API
       // const response = await customerProfilesAPI.getByAccountNumber(accountNumber);
-      const profile = mockProfiles.find(p => p.acct_no === accountNumber);
+      const profile = profiles.find(p => p.acct_no === accountNumber);
       setSelectedProfile(profile);
     } catch (error) {
       toast.error('Failed to fetch profile details');

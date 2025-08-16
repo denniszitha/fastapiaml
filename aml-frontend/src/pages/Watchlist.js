@@ -76,41 +76,10 @@ export default function Watchlist() {
     },
   });
 
-  // Mock data for demonstration
-  const mockWatchlist = [
-    {
-      id: 1,
-      account_number: 'ACC-2024-0089',
-      account_name: 'Suspicious Trading LLC',
-      reason_for_monitoring: 'Multiple large cash deposits exceeding reporting thresholds',
-      category: 'high-risk',
-      added_by: 'John Doe',
-      is_active: true,
-      created_at: '2024-01-10T10:30:00',
-    },
-    {
-      id: 2,
-      account_number: 'ACC-2024-0142',
-      account_name: 'International Holdings Corp',
-      reason_for_monitoring: 'PEP - Politically Exposed Person connection identified',
-      category: 'pep',
-      added_by: 'Jane Smith',
-      is_active: true,
-      created_at: '2024-01-08T14:20:00',
-    },
-    {
-      id: 3,
-      account_number: 'ACC-2024-0234',
-      account_name: 'Global Ventures Ltd',
-      reason_for_monitoring: 'Sanctions list match - subsidiary of sanctioned entity',
-      category: 'sanctions',
-      added_by: 'Mike Johnson',
-      is_active: true,
-      created_at: '2024-01-05T09:15:00',
-    },
-  ];
+  // Default empty data when API fails
+  const defaultWatchlist = [];
 
-  const watchlistItems = watchlistData?.data || mockWatchlist;
+  const watchlistItems = watchlistData?.data || defaultWatchlist;
 
   const filteredItems = watchlistItems.filter(item => {
     const matchesSearch = 

@@ -41,81 +41,50 @@ export default function Exemptions() {
     conditions: '',
   });
 
-  // Mock data for demonstration
-  const mockExemptions = [
-    {
-      id: 1,
-      account_number: 'ACC-2024-0045',
-      account_name: 'Government Agency ABC',
-      exemption_type: 'permanent',
-      reason: 'Government entity - regulatory reporting exemption',
-      start_date: '2024-01-01',
-      end_date: null,
-      is_active: true,
-      approved_by: 'John Doe',
-      created_at: '2024-01-01T09:00:00',
-      conditions: 'Monthly compliance review required',
-      used_count: 45,
-    },
-    {
-      id: 2,
-      account_number: 'ACC-2024-0089',
-      account_name: 'Charity Foundation XYZ',
-      exemption_type: 'temporary',
-      reason: 'Registered charity - fundraising campaign exemption',
-      start_date: '2024-01-10',
-      end_date: '2024-03-31',
-      is_active: true,
-      approved_by: 'Jane Smith',
-      created_at: '2024-01-09T14:30:00',
-      conditions: 'Maximum transaction amount: $100,000',
-      used_count: 23,
-    },
-    {
-      id: 3,
-      account_number: 'ACC-2024-0156',
-      account_name: 'Embassy of Country X',
-      exemption_type: 'permanent',
-      reason: 'Diplomatic immunity - embassy operations',
-      start_date: '2023-06-15',
-      end_date: null,
-      is_active: true,
-      approved_by: 'Mike Johnson',
-      created_at: '2023-06-14T10:00:00',
-      conditions: 'Quarterly audit required',
-      used_count: 128,
-    },
-    {
-      id: 4,
-      account_number: 'ACC-2024-0234',
-      account_name: 'Medical Research Institute',
-      exemption_type: 'conditional',
-      reason: 'Research grant transfers - specific project exemption',
-      start_date: '2024-01-15',
-      end_date: '2024-12-31',
-      is_active: true,
-      approved_by: 'Sarah Wilson',
-      created_at: '2024-01-14T11:45:00',
-      conditions: 'Only for transactions with approved research partners',
-      used_count: 8,
-    },
-    {
-      id: 5,
-      account_number: 'ACC-2024-0091',
-      account_name: 'International NGO',
-      exemption_type: 'review',
-      reason: 'Under review - pending documentation',
-      start_date: '2024-01-20',
-      end_date: '2024-02-20',
-      is_active: false,
-      approved_by: 'Tom Anderson',
-      created_at: '2024-01-19T16:20:00',
-      conditions: 'Awaiting additional compliance documentation',
-      used_count: 0,
-    },
-  ];
+  // Default empty data when API fails or no data
+  const defaultExemptions = [];
 
-  const exemptions = mockExemptions;
+  // Fetch exemptions from API
+  const { data: exemptionsData, isLoading } = useQuery({
+    queryKey: ['exemptions'],
+    queryFn: () => exemptionsAPI.getAll({ is_active: true }),
+  });
+
+  const exemptions = exemptionsData || defaultExemptions;
+
+  // Add exemption mutation
+  const addMutation = useMutation({
+    mutationFn: (data) => exemptionsAPI.add(data),
+    onSuccess: () => {
+      toast.success('Exemption added successfully');
+      queryClient.invalidateQueries(['exemptions']);
+      setShowAddModal(false);
+      setFormData({
+        account_number: '',
+        exemption_type: 'temporary',
+        reason: '',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: '',
+        approved_by: 'Admin',
+        conditions: '',
+      });
+    },
+    onError: () => {
+      toast.error('Failed to add exemption');
+    },
+  });
+
+  // Remove exemption mutation
+  const removeMutation = useMutation({
+    mutationFn: (accountNumber) => exemptionsAPI.remove(accountNumber),
+    onSuccess: () => {
+      toast.success('Exemption removed');
+      queryClient.invalidateQueries(['exemptions']);
+    },
+    onError: () => {
+      toast.error('Failed to remove exemption');
+    },
+  });
 
   const filteredExemptions = exemptions.filter(exemption => {
     const matchesSearch = 

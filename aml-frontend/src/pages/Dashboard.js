@@ -14,37 +14,17 @@ import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tool
 import { transactionAPI, suspiciousCasesAPI, watchlistAPI, exemptionsAPI, statisticsAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
-const stats = [
-  { name: 'Total Transactions', value: '24,589', change: '+12.5%', changeType: 'increase', icon: BanknotesIcon },
-  { name: 'Suspicious Cases', value: '142', change: '+4.2%', changeType: 'increase', icon: ExclamationTriangleIcon },
-  { name: 'Customer Profiles', value: '8,234', change: '+2.1%', changeType: 'increase', icon: UserGroupIcon },
-  { name: 'Watchlist Entries', value: '89', change: '-1.3%', changeType: 'decrease', icon: EyeIcon },
+// Default fallback data for when API fails
+const defaultStats = [
+  { name: 'Total Transactions', value: '0', change: '+0%', changeType: 'increase', icon: BanknotesIcon },
+  { name: 'Suspicious Cases', value: '0', change: '+0%', changeType: 'increase', icon: ExclamationTriangleIcon },
+  { name: 'Watchlist Entries', value: '0', change: '+0%', changeType: 'increase', icon: EyeIcon },
+  { name: 'Risk Score', value: '0', change: '+0%', changeType: 'increase', icon: ShieldCheckIcon },
 ];
 
-const transactionData = [
-  { date: 'Mon', transactions: 4000, flagged: 20 },
-  { date: 'Tue', transactions: 3800, flagged: 18 },
-  { date: 'Wed', transactions: 4200, flagged: 25 },
-  { date: 'Thu', transactions: 4500, flagged: 30 },
-  { date: 'Fri', transactions: 5000, flagged: 45 },
-  { date: 'Sat', transactions: 3200, flagged: 15 },
-  { date: 'Sun', transactions: 2800, flagged: 12 },
-];
-
-const riskDistribution = [
-  { name: 'Low Risk', value: 45, color: '#10b981' },
-  { name: 'Medium Risk', value: 30, color: '#f59e0b' },
-  { name: 'High Risk', value: 20, color: '#ef4444' },
-  { name: 'Critical', value: 5, color: '#7c3aed' },
-];
-
-const recentAlerts = [
-  { id: 1, type: 'High Value', account: 'ACC-2024-0142', amount: '$125,000', time: '5 minutes ago', status: 'pending' },
-  { id: 2, type: 'Unusual Pattern', account: 'ACC-2024-0089', amount: '$45,000', time: '12 minutes ago', status: 'reviewing' },
-  { id: 3, type: 'Watchlist Match', account: 'ACC-2024-0234', amount: '$18,500', time: '25 minutes ago', status: 'escalated' },
-  { id: 4, type: 'Rapid Movement', account: 'ACC-2024-0567', amount: '$89,000', time: '1 hour ago', status: 'pending' },
-  { id: 5, type: 'Structuring', account: 'ACC-2024-0789', amount: '$9,800', time: '2 hours ago', status: 'reviewing' },
-];
+const defaultTransactionData = [];
+const defaultRiskDistribution = [];
+const defaultRecentAlerts = [];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -52,11 +32,11 @@ function classNames(...classes) {
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
-  const [dashboardStats, setDashboardStats] = useState(stats);
+  const [dashboardStats, setDashboardStats] = useState(defaultStats);
   const [suspiciousCases, setSuspiciousCases] = useState([]);
-  const [transactionTrends, setTransactionTrends] = useState(transactionData);
-  const [riskData, setRiskData] = useState(riskDistribution);
-  const [recentCases, setRecentCases] = useState(recentAlerts);
+  const [transactionTrends, setTransactionTrends] = useState(defaultTransactionData);
+  const [riskData, setRiskData] = useState(defaultRiskDistribution);
+  const [recentCases, setRecentCases] = useState(defaultRecentAlerts);
   const [performanceKPIs, setPerformanceKPIs] = useState(null);
 
   useEffect(() => {
@@ -85,7 +65,7 @@ export default function Dashboard() {
         transactions: item.transaction_count,
         flagged: Math.floor(item.transaction_count * 0.05) // Estimate flagged as 5%
       }));
-      setTransactionTrends(volumeData.length > 0 ? volumeData : transactionData);
+      setTransactionTrends(volumeData.length > 0 ? volumeData : defaultTransactionData);
       
       // Fetch risk distribution
       const riskRes = await statisticsAPI.getRiskDistribution();

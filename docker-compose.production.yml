@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: aml-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-aml_database}
+      POSTGRES_USER: ${DB_USER:-aml_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - aml-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-aml_user}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: aml-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - aml-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: aml-backend
+    restart: always
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-aml_user}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-aml_database}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./app:/app/app
+      - ./logs:/app/logs
+    ports:
+      - "50000:50000"
+    networks:
+      - aml-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./aml-frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-/api/v1}
+    container_name: aml-frontend
+    restart: always
+    volumes:
+      - ./aml-frontend/build:/usr/share/nginx/html
+    networks:
+      - aml-network
+    depends_on:
+      - backend
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: aml-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-production.conf:/etc/nginx/conf.d/default.conf
+      - ./aml-frontend/build:/usr/share/nginx/html
+      - ./ssl:/etc/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - aml-network
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  aml-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -23,6 +23,12 @@ def get_cors_origins() -> List[str]:
         "http://127.0.0.1:3003",
         "http://localhost:8080",
         "http://127.0.0.1:8080",
+        "http://102.23.120.243",
+        "http://102.23.120.243:3000",
+        "http://102.23.120.243:3001",
+        "http://102.23.120.243:8080",
+        "http://102.23.120.243:50000",
+        "https://102.23.120.243",
     ]
     
     # Production origins from environment variable

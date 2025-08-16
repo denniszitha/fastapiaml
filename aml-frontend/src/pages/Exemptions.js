@@ -45,12 +45,34 @@ export default function Exemptions() {
   const defaultExemptions = [];
 
   // Fetch exemptions from API
-  const { data: exemptionsData, isLoading } = useQuery({
+  const { data: exemptionsData, isLoading, error } = useQuery({
     queryKey: ['exemptions'],
     queryFn: () => exemptionsAPI.getAll({ is_active: true }),
+    onError: (err) => {
+      console.error('Failed to fetch exemptions:', err);
+      toast.error('Failed to load exemptions');
+    },
   });
 
-  const exemptions = exemptionsData || defaultExemptions;
+  // Handle different API response formats and ensure we always have an array
+  let exemptions = defaultExemptions;
+  
+  if (!isLoading && !error) {
+    if (Array.isArray(exemptionsData)) {
+      exemptions = exemptionsData;
+    } else if (exemptionsData && typeof exemptionsData === 'object') {
+      // Check for common API response patterns
+      if (Array.isArray(exemptionsData.data)) {
+        exemptions = exemptionsData.data;
+      } else if (Array.isArray(exemptionsData.items)) {
+        exemptions = exemptionsData.items;
+      } else if (Array.isArray(exemptionsData.results)) {
+        exemptions = exemptionsData.results;
+      } else if (Array.isArray(exemptionsData.exemptions)) {
+        exemptions = exemptionsData.exemptions;
+      }
+    }
+  }
 
   // Add exemption mutation
   const addMutation = useMutation({
@@ -86,23 +108,37 @@ export default function Exemptions() {
     },
   });
 
-  const filteredExemptions = exemptions.filter(exemption => {
-    const matchesSearch = 
-      (exemption.account_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (exemption.account_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (exemption.exemption_reason || exemption.reason || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = 
-      typeFilter === 'all' || exemption.exemption_type === typeFilter;
-    
-    const matchesStatus = 
-      (statusFilter === 'active' && exemption.is_active) ||
-      (statusFilter === 'inactive' && !exemption.is_active) ||
-      (statusFilter === 'expired' && exemption.expiry_date && new Date(exemption.expiry_date) < new Date()) ||
-      statusFilter === 'all';
-    
-    return matchesSearch && matchesType && matchesStatus;
-  });
+  // Ensure exemptions is always an array before filtering
+  const safeExemptions = Array.isArray(exemptions) ? exemptions : [];
+  
+  // Apply filters with null safety
+  const filteredExemptions = React.useMemo(() => {
+    try {
+      return safeExemptions.filter(exemption => {
+        // Ensure exemption is an object
+        if (!exemption || typeof exemption !== 'object') return false;
+        
+        const matchesSearch = 
+          (exemption.account_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (exemption.account_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (exemption.exemption_reason || exemption.reason || '').toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesType = 
+          typeFilter === 'all' || exemption.exemption_type === typeFilter;
+        
+        const matchesStatus = 
+          (statusFilter === 'active' && exemption.is_active) ||
+          (statusFilter === 'inactive' && !exemption.is_active) ||
+          (statusFilter === 'expired' && exemption.expiry_date && new Date(exemption.expiry_date) < new Date()) ||
+          statusFilter === 'all';
+        
+        return matchesSearch && matchesType && matchesStatus;
+      });
+    } catch (err) {
+      console.error('Error filtering exemptions:', err);
+      return [];
+    }
+  }, [safeExemptions, searchTerm, typeFilter, statusFilter]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -126,15 +162,15 @@ export default function Exemptions() {
   };
 
   const stats = {
-    total: exemptions.length,
-    active: exemptions.filter(e => e.is_active).length,
-    expiring: exemptions.filter(e => {
+    total: safeExemptions.length,
+    active: safeExemptions.filter(e => e.is_active).length,
+    expiring: safeExemptions.filter(e => {
       const expiryDate = e.expiry_date || e.end_date;
       if (!expiryDate) return false;
       const daysUntilExpiry = Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
       return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
     }).length,
-    expired: exemptions.filter(e => {
+    expired: safeExemptions.filter(e => {
       const expiryDate = e.expiry_date || e.end_date;
       return expiryDate && new Date(expiryDate) < new Date();
     }).length,
@@ -297,7 +333,22 @@ export default function Exemptions() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredExemptions.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
+                    <div className="flex justify-center items-center">
+                      <ArrowPathIcon className="h-5 w-5 mr-2 animate-spin" />
+                      Loading exemptions...
+                    </div>
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan="8" className="px-6 py-4 text-center text-red-500">
+                    Failed to load exemptions. Please try refreshing the page.
+                  </td>
+                </tr>
+              ) : filteredExemptions.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
                     No exemptions found

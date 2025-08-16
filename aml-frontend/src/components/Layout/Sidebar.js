@@ -90,7 +90,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     </button>
                   </div>
                 </Transition.Child>
-                <SidebarContent location={location} />
+                <SidebarContent location={location} navigate={navigate} />
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -99,13 +99,13 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
       {/* Static sidebar for desktop */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <SidebarContent location={location} />
+        <SidebarContent location={location} navigate={navigate} />
       </div>
     </>
   );
 }
 
-function SidebarContent({ location }) {
+function SidebarContent({ location, navigate }) {
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">
       {/* Logo */}

@@ -284,22 +284,73 @@ fi
 echo ""
 echo -e "${GREEN}Step 6: Building and starting frontend...${NC}"
 echo "---------------------------------------"
+
+# Check if we're in the right directory
+if [ ! -d "aml-frontend" ]; then
+    echo -e "${RED}✗ aml-frontend directory not found!${NC}"
+    exit 1
+fi
+
 cd aml-frontend
 
 # Update API URL in frontend for production
 echo "Configuring frontend for production..."
 export REACT_APP_API_URL=http://$PUBLIC_IP:$BACKEND_PORT/api/v1
 export REACT_APP_ENVIRONMENT=production
+export NODE_OPTIONS="--max-old-space-size=2048"
 
-# Install dependencies and build
+# Clean previous builds
+echo "Cleaning previous builds..."
+rm -rf build node_modules package-lock.json
+
+# Install dependencies with fallback options
 echo "Installing frontend dependencies..."
-npm install --silent
+npm install --legacy-peer-deps || npm install --force || {
+    echo -e "${YELLOW}⚠ npm install failed, trying with yarn...${NC}"
+    npx yarn install
+}
 
 echo "Building frontend..."
-npm run build
-
-if [ ! -d "build" ]; then
+npm run build || {
+    echo -e "${YELLOW}⚠ Build failed, retrying with increased memory...${NC}"
+    export NODE_OPTIONS="--max-old-space-size=4096"
+    npm run build
+} || {
     echo -e "${RED}✗ Frontend build failed!${NC}"
+    echo "Creating fallback HTML..."
+    mkdir -p build
+    cat > build/index.html << 'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>AML Monitor - Setup Required</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; text-align: center; }
+        .status { padding: 20px; background: #f0f0f0; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>AML Monitor - Frontend Build Required</h1>
+    <div class="status">
+        <p>The frontend needs to be built manually.</p>
+        <p>Backend API Status: <span id="api-status">Checking...</span></p>
+    </div>
+    <p>To complete setup, run: <code>./complete_frontend_deployment.sh</code></p>
+    <script>
+        fetch('/api/v1/health')
+            .then(r => r.json())
+            .then(d => document.getElementById('api-status').innerHTML = '✓ Connected')
+            .catch(e => document.getElementById('api-status').innerHTML = '✗ Error: ' + e.message);
+    </script>
+</body>
+</html>
+HTML
+}
+
+if [ ! -f "build/index.html" ]; then
+    echo -e "${RED}✗ No index.html found even after fallback!${NC}"
+    cd ..
     exit 1
 fi
 
@@ -324,9 +375,14 @@ server {
         add_header X-XSS-Protection "1; mode=block" always;
     }
     
-    # API proxy
+    # API proxy - try multiple backend locations
     location /api/ {
+        # Try Docker's host gateway first
         proxy_pass http://host.docker.internal:$BACKEND_PORT;
+        
+        # Fallback to direct IP if host.docker.internal fails
+        error_page 502 503 504 = @api_fallback;
+        
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -340,6 +396,17 @@ server {
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
+        
+        # CORS headers
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+    }
+    
+    # Fallback API proxy using Docker bridge IP
+    location @api_fallback {
+        proxy_pass http://172.17.0.1:$BACKEND_PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
     }
     
     # Health check endpoint

@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # Simple Backend - No database required
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: aml-backend-simple
+    ports:
+      - "50000:50000"
+    environment:
+      - CORS_ALLOWED_ORIGINS=*
+      - DEBUG=True
+    volumes:
+      - ./app:/app/app
+    restart: always
+
+  # Frontend
+  frontend:
+    build:
+      context: ./aml-frontend
+      dockerfile: Dockerfile
+    container_name: aml-frontend-simple
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://102.23.120.243:50000/api/v1
+    depends_on:
+      - backend
+    restart: always

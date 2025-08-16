@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile.simple
     container_name: aml-backend-simple
     ports:
-      - "50000:50000"
+      - "8000:50000"
     environment:
       - CORS_ALLOWED_ORIGINS=*
       - DEBUG=True
@@ -25,7 +25,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      - REACT_APP_API_URL=http://102.23.120.243:50000/api/v1
+      - REACT_APP_API_URL=http://102.23.120.243:8000/api/v1
     depends_on:
       - backend
     restart: always

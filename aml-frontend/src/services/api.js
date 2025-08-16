@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 
 // In production, use relative URL to avoid CORS
 const API_BASE_URL = process.env.REACT_APP_API_URL || 
-                     (window.location.hostname === 'localhost' ? 'http://localhost:50000/api/v1' : '/api/v1');
+                     (window.location.hostname === 'localhost' ? 'http://localhost:8000/api/v1' : '/api/v1');
 
 const api = axios.create({
   baseURL: API_BASE_URL,

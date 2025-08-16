@@ -18,7 +18,7 @@ services:
     networks:
       - aml-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-aml_user}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -54,7 +54,7 @@ services:
       - ./app:/app/app
       - ./logs:/app/logs
     ports:
-      - "50000:8000"
+      - "8000:50000"
     networks:
       - aml-network
     depends_on:

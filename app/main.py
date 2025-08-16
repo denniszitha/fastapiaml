@@ -18,8 +18,15 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up AML Transaction Monitoring System...")
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
+    try:
+        # Import init_db function
+        from app.db.init_db import init_db
+        # Initialize database with proper enum handling
+        init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+        # Continue anyway - some endpoints might still work
     yield
     # Shutdown
     logger.info("Shutting down...")

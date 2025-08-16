@@ -1,11 +1,14 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from app.core.config import settings
 from app.api.endpoints import transaction_monitoring, simple_statistics, auth
 from app.db.base import engine, Base
+from app.middleware.cors_middleware import cors_middleware
 
 # Configure logging
 logging.basicConfig(
@@ -31,15 +34,35 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# SUPER SIMPLE CORS - Allow everything
+# CRITICAL: Add custom CORS middleware FIRST (before CORSMiddleware)
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    return await cors_middleware(request, call_next)
+
+# Get allowed origins from environment or use wildcard for simplicity
+allowed_origins = os.getenv('CORS_ALLOWED_ORIGINS', '*').split(',')
+if '*' in allowed_origins:
+    allowed_origins = ["*"]
+
+# Add standard CORS middleware as backup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],  # Expose all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=86400,
 )
+
+# Add trusted host middleware for production
+if os.getenv('ENVIRONMENT') == 'production':
+    trusted_hosts = os.getenv('TRUSTED_HOSTS', '').split(',')
+    if trusted_hosts and trusted_hosts[0]:
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=trusted_hosts
+        )
 
 # Include routers
 app.include_router(
@@ -54,7 +77,7 @@ app.include_router(
     tags=["simple-statistics"]
 )
 
-# Try to include statistics if it exists
+# Check if statistics module exists
 try:
     from app.api.endpoints import statistics
     app.include_router(
@@ -63,7 +86,7 @@ try:
         tags=["statistics"]
     )
 except ImportError:
-    pass
+    logger.warning("Statistics module not found, skipping...")
 
 app.include_router(
     auth.router,
@@ -84,7 +107,8 @@ async def health_check():
     return {
         "status": "healthy",
         "monitoring_enabled": settings.MONITORING_ENABLED,
-        "database": "connected"
+        "database": "connected",
+        "cors_enabled": True
     }
 
 @app.get(f"{settings.API_V1_PREFIX}/health")
@@ -92,5 +116,11 @@ async def api_health_check():
     return {
         "status": "healthy",
         "monitoring_enabled": settings.MONITORING_ENABLED,
-        "database": "connected"
+        "database": "connected",
+        "cors_enabled": True
     }
+
+# Add explicit OPTIONS handler for all routes
+@app.options("/{full_path:path}")
+async def options_handler(full_path: str):
+    return {"message": "OK"}

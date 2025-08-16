@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
+from app.core.cors import get_cors_config
 from app.api.endpoints import transaction_monitoring, simple_statistics, auth
 from app.db.base import engine, Base
 
@@ -31,14 +32,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# SUPER SIMPLE CORS - Allow everything
+# Set up CORS with dynamic configuration
+cors_config = get_cors_config()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
-    expose_headers=["*"],  # Expose all headers
+    **cors_config
 )
 
 # Include routers
@@ -51,19 +49,8 @@ app.include_router(
 app.include_router(
     simple_statistics.router,
     prefix=settings.API_V1_PREFIX,
-    tags=["simple-statistics"]
+    tags=["statistics"]
 )
-
-# Try to include statistics if it exists
-try:
-    from app.api.endpoints import statistics
-    app.include_router(
-        statistics.router,
-        prefix=settings.API_V1_PREFIX,
-        tags=["statistics"]
-    )
-except ImportError:
-    pass
 
 app.include_router(
     auth.router,
@@ -81,14 +68,6 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {
-        "status": "healthy",
-        "monitoring_enabled": settings.MONITORING_ENABLED,
-        "database": "connected"
-    }
-
-@app.get(f"{settings.API_V1_PREFIX}/health")
-async def api_health_check():
     return {
         "status": "healthy",
         "monitoring_enabled": settings.MONITORING_ENABLED,

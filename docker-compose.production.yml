@@ -7,11 +7,12 @@ services:
     container_name: aml-postgres
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME:-aml_database}
-      POSTGRES_USER: ${DB_USER:-aml_user}
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5433:5432"
     networks:
@@ -47,7 +48,7 @@ services:
     env_file:
       - .env.production
     environment:
-      DATABASE_URL: postgresql://${DB_USER:-aml_user}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-aml_database}
+      DATABASE_URL: postgresql://aml_user:${DB_PASSWORD}@postgres:5432/aml_database
       REDIS_URL: redis://redis:6379/0
     volumes:
       - ./app:/app/app

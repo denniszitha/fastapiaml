@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir \
     python-jose[cryptography] \
     passlib[bcrypt] \
     python-multipart \
+    email-validator \
+    pydantic[email] \
     sqlalchemy \
     psycopg2-binary
 

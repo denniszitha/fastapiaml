@@ -88,9 +88,9 @@ export default function Exemptions() {
 
   const filteredExemptions = exemptions.filter(exemption => {
     const matchesSearch = 
-      exemption.account_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exemption.account_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      exemption.reason.toLowerCase().includes(searchTerm.toLowerCase());
+      (exemption.account_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (exemption.account_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (exemption.exemption_reason || exemption.reason || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesType = 
       typeFilter === 'all' || exemption.exemption_type === typeFilter;
@@ -98,7 +98,7 @@ export default function Exemptions() {
     const matchesStatus = 
       (statusFilter === 'active' && exemption.is_active) ||
       (statusFilter === 'inactive' && !exemption.is_active) ||
-      (statusFilter === 'expired' && exemption.end_date && new Date(exemption.end_date) < new Date()) ||
+      (statusFilter === 'expired' && exemption.expiry_date && new Date(exemption.expiry_date) < new Date()) ||
       statusFilter === 'all';
     
     return matchesSearch && matchesType && matchesStatus;
@@ -129,11 +129,15 @@ export default function Exemptions() {
     total: exemptions.length,
     active: exemptions.filter(e => e.is_active).length,
     expiring: exemptions.filter(e => {
-      if (!e.end_date) return false;
-      const daysUntilExpiry = Math.ceil((new Date(e.end_date) - new Date()) / (1000 * 60 * 60 * 24));
+      const expiryDate = e.expiry_date || e.end_date;
+      if (!expiryDate) return false;
+      const daysUntilExpiry = Math.ceil((new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
       return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
     }).length,
-    expired: exemptions.filter(e => e.end_date && new Date(e.end_date) < new Date()).length,
+    expired: exemptions.filter(e => {
+      const expiryDate = e.expiry_date || e.end_date;
+      return expiryDate && new Date(expiryDate) < new Date();
+    }).length,
   };
 
   const isExpiringSoon = (endDate) => {

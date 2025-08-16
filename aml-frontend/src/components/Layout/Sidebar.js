@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
 import {
   HomeIcon,
@@ -31,10 +32,10 @@ const navigation = [
 ];
 
 const quickActions = [
-  { name: 'Review Alerts', icon: BellAlertIcon, count: 12 },
-  { name: 'Pending STRs', icon: ClipboardDocumentCheckIcon, count: 3 },
-  { name: 'Risk Analysis', icon: ChartPieIcon },
-  { name: 'Daily Summary', icon: BanknotesIcon },
+  { name: 'Review Alerts', icon: BellAlertIcon, count: 12, path: '/suspicious-cases' },
+  { name: 'Pending STRs', icon: ClipboardDocumentCheckIcon, count: 3, path: '/suspicious-cases' },
+  { name: 'Risk Analysis', icon: ChartPieIcon, path: '/customer-profiles' },
+  { name: 'Daily Summary', icon: BanknotesIcon, path: '/dashboard' },
 ];
 
 function classNames(...classes) {
@@ -43,6 +44,7 @@ function classNames(...classes) {
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -152,7 +154,15 @@ function SidebarContent({ location }) {
             <ul role="list" className="-mx-2 mt-2 space-y-1">
               {quickActions.map((action) => (
                 <li key={action.name}>
-                  <button className="text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full">
+                  <button 
+                    onClick={() => {
+                      if (action.path) {
+                        navigate(action.path);
+                      } else {
+                        toast.info(`${action.name} - Coming soon!`);
+                      }
+                    }}
+                    className="text-gray-400 hover:text-white hover:bg-gray-800 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full">
                     <action.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                     <span className="truncate">{action.name}</span>
                     {action.count && (

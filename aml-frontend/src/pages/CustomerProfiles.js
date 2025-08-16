@@ -86,11 +86,8 @@ export default function CustomerProfiles() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Profiles</p>
-              <p className="text-2xl font-semibold text-gray-900">8,234</p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <ArrowUpIcon className="h-3 w-3 mr-1" />
-                +2.1% from last month
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">{profiles.length}</p>
+              <p className="text-sm text-gray-500 mt-1">Active profiles</p>
             </div>
             <UserIcon className="h-8 w-8 text-blue-500" />
           </div>
@@ -99,11 +96,8 @@ export default function CustomerProfiles() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">High Risk</p>
-              <p className="text-2xl font-semibold text-red-600">342</p>
-              <p className="text-sm text-red-600 flex items-center mt-1">
-                <ArrowUpIcon className="h-3 w-3 mr-1" />
-                +5.2% from last month
-              </p>
+              <p className="text-2xl font-semibold text-red-600">{profiles.filter(p => p.risk_level === 'high' || p.risk_level === 'critical').length}</p>
+              <p className="text-sm text-gray-500 mt-1">Requires attention</p>
             </div>
             <ExclamationTriangleIcon className="h-8 w-8 text-red-500" />
           </div>
@@ -112,11 +106,8 @@ export default function CustomerProfiles() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Avg Risk Score</p>
-              <p className="text-2xl font-semibold text-gray-900">42.8</p>
-              <p className="text-sm text-gray-600 flex items-center mt-1">
-                <ArrowDownIcon className="h-3 w-3 mr-1" />
-                -1.3% from last month
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">{profiles.length > 0 ? (profiles.reduce((acc, p) => acc + (p.risk_score || 0), 0) / profiles.length).toFixed(1) : '0.0'}</p>
+              <p className="text-sm text-gray-500 mt-1">Average score</p>
             </div>
             <ChartBarIcon className="h-8 w-8 text-yellow-500" />
           </div>
@@ -125,10 +116,8 @@ export default function CustomerProfiles() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Today</p>
-              <p className="text-2xl font-semibold text-gray-900">1,245</p>
-              <p className="text-sm text-gray-600 mt-1">
-                Last 24 hours
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">{profiles.filter(p => p.updated_at && new Date(p.updated_at) > new Date(Date.now() - 86400000)).length}</p>
+              <p className="text-sm text-gray-500 mt-1">Last 24 hours</p>
             </div>
             <ClockIcon className="h-8 w-8 text-green-500" />
           </div>

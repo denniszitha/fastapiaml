@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  data-populator:
+    image: python:3.11-slim
+    container_name: aml-data-populator
+    networks:
+      - aml-network
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=aml_monitoring
+      - DB_USER=aml_user
+      - DB_PASSWORD=secure_password
+      - API_HOST=aml-backend
+      - API_PORT=8000
+      - POPULATE_INTERVAL=5  # seconds between batches
+      - BATCH_SIZE=5  # transactions per batch
+    volumes:
+      - ./populate_container.py:/app/populate.py:ro
+    working_dir: /app
+    command: >
+      sh -c "pip install requests psycopg2-binary && 
+             echo 'Starting continuous data population...' &&
+             python -u populate.py"
+    depends_on:
+      - postgres
+      - aml-backend
+    restart: unless-stopped
+
+networks:
+  aml-network:
+    external: true

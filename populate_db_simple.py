@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple Database Population Script for AML System
-Continuously generates test data for the monitoring system
+Simple Database Population Script for AML System Docker Containers
+Continuously generates test data directly into the containerized monitoring system
 """
 
 import requests
@@ -10,19 +10,33 @@ import time
 import json
 from datetime import datetime, timedelta
 import sys
+import os
 
-# Configuration
-API_BASE = "http://localhost:8000/api/v1"
-PUBLIC_IP = "102.23.120.243"
+# Configuration - Works with Docker containers
+# Try different connection methods in order
+API_BASE = None
+ENDPOINTS_TO_TRY = [
+    ("Docker container (localhost:8000)", "http://localhost:8000/api/v1"),
+    ("Docker container (localhost:50000)", "http://localhost:50000/api/v1"),
+    ("Public IP", f"http://{os.getenv('PUBLIC_IP', '102.23.120.243')}:8000/api/v1"),
+    ("Docker host", "http://host.docker.internal:8000/api/v1"),
+    ("Docker network", "http://aml-backend:8000/api/v1"),
+]
 
-# Try to use public IP if available
-try:
-    r = requests.get(f"http://{PUBLIC_IP}:8000/health", timeout=2)
-    if r.status_code == 200:
-        API_BASE = f"http://{PUBLIC_IP}:8000/api/v1"
-        print(f"Using public IP: {PUBLIC_IP}")
-except:
-    print("Using localhost")
+print("Detecting backend connection...")
+for name, endpoint in ENDPOINTS_TO_TRY:
+    try:
+        r = requests.get(f"{endpoint.replace('/api/v1', '')}/health", timeout=2)
+        if r.status_code == 200:
+            API_BASE = endpoint
+            print(f"✓ Connected via: {name}")
+            break
+    except:
+        continue
+
+if not API_BASE:
+    print("⚠️  Could not connect to backend. Using default.")
+    API_BASE = "http://localhost:8000/api/v1"
 
 # Sample data
 NAMES = ["John Smith", "Maria Garcia", "Li Wei", "Ahmed Hassan", "Sarah Johnson",

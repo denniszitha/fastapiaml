@@ -4,7 +4,7 @@ Database initialization script with proper enum handling
 from sqlalchemy import text, inspect
 from sqlalchemy.exc import ProgrammingError
 from app.db.base import engine, Base, SQLALCHEMY_DATABASE_URL
-from app.models import User, CustomerProfile, Watchlist, Exemption, TransactionLimit
+from app.models import User, CustomerProfile, Watchlist, TransactionExemption, TransactionLimit
 import logging
 
 logger = logging.getLogger(__name__)

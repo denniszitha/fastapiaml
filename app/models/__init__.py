@@ -2,25 +2,22 @@
 Models package initialization
 """
 from app.models.user import User
-from app.models.transaction import Transaction
-from app.models.reference import (
+from app.models.transaction import (
+    Transaction, 
+    SuspiciousCase,
     CustomerProfile,
     Watchlist,
-    Exemption,
-    TransactionLimit
+    TransactionExemption,
+    TransactionLimit,
+    RawTransaction
 )
 
 # Create aliases for compatibility
 customer_profile = CustomerProfile
 watchlist = Watchlist
-exemption = Exemption
+exemption = TransactionExemption
+Exemption = TransactionExemption  # Alias
 transaction_limit = TransactionLimit
-
-# For backward compatibility - create a mock SuspiciousCase if needed
-class SuspiciousCase:
-    """Mock SuspiciousCase model for compatibility"""
-    pass
-
 suspicious_case = SuspiciousCase
 
 __all__ = [
@@ -28,9 +25,11 @@ __all__ = [
     'Transaction',
     'CustomerProfile',
     'Watchlist',
+    'TransactionExemption',
     'Exemption',
     'TransactionLimit',
     'SuspiciousCase',
+    'RawTransaction',
     'customer_profile',
     'watchlist',
     'exemption',

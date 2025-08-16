@@ -3,14 +3,19 @@ Database initialization script with proper enum handling
 """
 from sqlalchemy import text, inspect
 from sqlalchemy.exc import ProgrammingError
-from app.db.base import engine, Base
-from app.models import user, suspicious_case, customer_profile, watchlist, exemption, transaction_limit
+from app.db.base import engine, Base, SQLALCHEMY_DATABASE_URL
+from app.models import User, CustomerProfile, Watchlist, Exemption, TransactionLimit
 import logging
 
 logger = logging.getLogger(__name__)
 
 def check_and_create_enums():
     """Check if enum types exist and create them if needed"""
+    # Skip enum creation for SQLite
+    if "sqlite" in SQLALCHEMY_DATABASE_URL.lower():
+        logger.info("Using SQLite - skipping enum creation")
+        return
+    
     with engine.connect() as conn:
         # Check existing enum types
         result = conn.execute(text("""

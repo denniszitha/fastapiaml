@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from app.core.database_config import DATABASE_URL
+from app.core.postgres_config import DATABASE_URL
 
 SQLALCHEMY_DATABASE_URL = DATABASE_URL
 

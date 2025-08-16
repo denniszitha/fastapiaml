@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - aml-network
     healthcheck:
@@ -28,7 +28,7 @@ services:
     container_name: aml-redis
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     networks:
       - aml-network
     healthcheck:

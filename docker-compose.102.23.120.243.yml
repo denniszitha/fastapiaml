@@ -63,7 +63,7 @@ services:
     environment:
       REACT_APP_API_URL: http://102.23.120.243:50000/api/v1
     ports:
-      - "3000:80"
+      - "8080:80"
     networks:
       - aml-network
     depends_on:

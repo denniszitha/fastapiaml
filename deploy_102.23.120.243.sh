@@ -67,7 +67,7 @@ curl -s http://$PUBLIC_IP:50000/health | python3 -m json.tool || echo "Health ch
 echo ""
 echo "Testing CORS headers..."
 curl -I -X OPTIONS http://$PUBLIC_IP:50000/api/v1/health \
-  -H "Origin: http://$PUBLIC_IP:3000" \
+  -H "Origin: http://$PUBLIC_IP:8080" \
   -H "Access-Control-Request-Method: GET" 2>/dev/null | grep -i "access-control" || echo "No CORS headers found"
 
 echo ""
@@ -76,7 +76,7 @@ echo "Deployment complete!"
 echo "========================================="
 echo ""
 echo "Access the application at:"
-echo "  Frontend: http://$PUBLIC_IP:3000"
+echo "  Frontend: http://$PUBLIC_IP:8080"
 echo "  Backend API: http://$PUBLIC_IP:50000"
 echo "  API Docs: http://$PUBLIC_IP:50000/docs"
 echo ""

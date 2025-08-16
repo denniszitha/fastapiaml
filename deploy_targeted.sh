@@ -111,7 +111,7 @@ npm run build
 echo "Starting frontend server..."
 docker run -d \
   --name aml-frontend \
-  -p 3000:80 \
+  -p 8080:80 \
   -v $(pwd)/build:/usr/share/nginx/html:ro \
   --restart always \
   nginx:alpine
@@ -132,7 +132,7 @@ echo "Deployment Complete!"
 echo "========================================="
 echo ""
 echo "AML System is running at:"
-echo "  Frontend: http://$PUBLIC_IP:3000"
+echo "  Frontend: http://$PUBLIC_IP:8080"
 echo "  Backend: http://$PUBLIC_IP:50000"
 echo "  API Docs: http://$PUBLIC_IP:50000/docs"
 echo ""

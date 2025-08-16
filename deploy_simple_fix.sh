@@ -48,7 +48,7 @@ npm run build
 
 # Serve with simple HTTP server
 echo "Starting frontend..."
-npx serve -s build -l 3000 &
+npx serve -s build -l 8080 &
 
 cd ..
 
@@ -58,7 +58,7 @@ echo "Deployment Complete!"
 echo "========================================="
 echo ""
 echo "Access the application:"
-echo "  Frontend: http://$PUBLIC_IP:3000"
+echo "  Frontend: http://$PUBLIC_IP:8080"
 echo "  Backend: http://$PUBLIC_IP:50000"
 echo "  API Docs: http://$PUBLIC_IP:50000/docs"
 echo ""
